@@ -1,0 +1,6 @@
+# Runtime dependencies. Compile the hashed lock with:
+#   uv pip compile --universal --python-version 3.15 --generate-hashes requirements.in -o requirements.txt
+# tplinkrouterc6u is pinned to the version vetted in homelab#1931 AC1; its wheel
+# sha256 must stay cf50956dc95ad86c9f77cd3be22f34bdd56087b5e86ce89a82cf36a59da4fd6f.
+tplinkrouterc6u==5.38.0
+prometheus-client

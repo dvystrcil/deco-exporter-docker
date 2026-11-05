@@ -1,0 +1,55 @@
+name: tests
+
+# Unit tests against recorded Deco responses (tests/fixtures). Hermetic: no
+# network, no router. The real router is only ever touched by
+# bin/receipt-live.sh, run by hand against the deployed exporter.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: deco-exporter-docker-runner
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.15'
+
+      # The lock is the supply-chain control: if someone regenerates it and the
+      # library's wheel hash changes, that is a new, unvetted artifact.
+      - name: Lock still pins the vetted tplinkrouterc6u wheel
+        run: |
+          grep -q 'cf50956dc95ad86c9f77cd3be22f34bdd56087b5e86ce89a82cf36a59da4fd6f' requirements.txt \
+            || { echo "::error::requirements.txt no longer carries the AC1-vetted wheel hash (homelab#1931)"; exit 1; }
+          grep -q '^tplinkrouterc6u==5.38.0 ' requirements.txt \
+            || { echo "::error::tplinkrouterc6u is no longer pinned to 5.38.0"; exit 1; }
+
+      - name: Install the runtime lock (hashed, wheels only) + pytest
+        run: |
+          python3 -m pip install --quiet --require-hashes --only-binary :all: -r requirements.txt
+          python3 -m pip install --quiet pytest
+
+      - name: Unit tests
+        run: python3 -m pytest tests -q --strict-markers -p no:cacheprovider | tee pytest.out
+
+      # pytest exits 0 if a broken conftest collects a fraction of the suite.
+      # Assert the count from the summary line; an unreadable count fails.
+      - name: Assert the suite actually ran
+        run: |
+          set -euo pipefail
+          count=$(sed -n 's/^\([0-9][0-9]*\) passed.*/\1/p' pytest.out | tail -1)
+          if [ -z "$count" ]; then
+            echo "::error::could not read a pass count from pytest output"; exit 1
+          fi
+          echo "passed $count test(s)"
+          if [ "$count" -lt 30 ]; then
+            echo "::error::only $count tests passed; 37 existed when this check was written"
+            exit 1
+          fi
