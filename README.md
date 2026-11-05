@@ -60,11 +60,13 @@ On any error the exporter logs in again with a fresh session and retries once.
 | `deco_mesh_node_backhaul_signal_dbm` | `mac`, `band` | uplink signal per band |
 | `deco_mesh_node_backhaul_rate_raw` | `mac`, `band`, `direction` | uplink link rate as reported |
 
-> **The units of `up_speed`/`down_speed` are not known yet.** The Deco keeps no
-> byte counters and documents no unit; the HA integration calls them kB/s, but
-> that is unverified. Hence the `_raw` suffix. Once a known transfer has been
-> sampled (homelab#1931 calibration), a recording rule or a rename can carry
-> the real unit.
+> **`up_speed`/`down_speed` are kbit/s (decimal).** Calibrated on 2026-11-05
+> (BE85, firmware 1.3.0 Build 26090112) with `bin/calibrate-units.py`: a
+> download held at 5 MiB/s (41.87 Mbit/s) read 44,244–46,070, so the Deco
+> reports ~8% above curl's payload rate (it counts headers). That's **not** the
+> kB/s the HA integration assumes, which would be 8× off. The metrics keep the
+> `_raw` suffix until a rename or recording rule carries the unit (homelab#1931).
+> The figure ramps over ~2 polls, so a short burst reads low.
 
 A failed or stale poll exports `deco_scrape_success 0` and **no** client,
 router or mesh series: never the last good values, which would hide the
@@ -97,6 +99,7 @@ uv pip install -p .venv --require-hashes --only-binary :all: -r requirements.txt
 .venv/bin/pytest -q tests            # unit tests, recorded fixtures, no network
 docker build -t deco-exporter:local . && bin/smoke-test.sh deco-exporter:local
 bin/receipt-live.sh                  # against the DEPLOYED pod and the real router
+bin/calibrate-units.py run           # re-pin the speed unit: ~7 min, 2 GiB download on THIS host
 ```
 
 Fixtures come from the library's own recorded Deco responses

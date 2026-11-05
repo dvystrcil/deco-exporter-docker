@@ -1,0 +1,41 @@
+{
+ "_note": "Real run, 2026-11-05 17:51Z, by `bin/calibrate-units.py run` itself: laptop 192.168.86.56, --limit-rate 5M, 1 GiB. The poll at +108 s read about HALF the true rate: the Deco's figure ramps over ~2 polls, which is why SETTLE_S is 120.",
+ "ip": "192.168.86.56",
+ "runs": [
+  {
+   "start": 1793901072.8065329,
+   "end": 1793901277.9851162,
+   "bytes_per_s": 5233303.0
+  }
+ ],
+ "polls": [
+  {
+   "start": 1793900926.2120762,
+   "raw": 469.0
+  },
+  {
+   "start": 1793900989.7815478,
+   "raw": 469.0
+  },
+  {
+   "start": 1793901053.3544462,
+   "raw": 457.0
+  },
+  {
+   "start": 1793901116.9362733,
+   "raw": 475.0
+  },
+  {
+   "start": 1793901180.4882822,
+   "raw": 23898.0
+  },
+  {
+   "start": 1793901244.059051,
+   "raw": 45769.0
+  },
+  {
+   "start": 1793901307.6169767,
+   "raw": 45855.0
+  }
+ ]
+}
