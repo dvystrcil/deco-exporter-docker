@@ -1,0 +1,117 @@
+# Image build pipeline for deco-exporter (homelab#1931).
+#
+# Mirrors nscale-calc-docker / kroger-mcp-docker: in-cluster ARC runner,
+# Infisical for Harbor + CICD App credentials, push :dev, then
+# release-action cuts a patch-bump release and docker-release.yaml retags
+# :dev as :X.Y.Z (no `v` on image tags).
+#
+# Prerequisite: the `deco-exporter-docker-runner` ARC scale set in
+# dvystrcil/argocd-projects:arc/arc-build-runners.yaml.
+
+name: build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE'
+      - '.github/CODEOWNERS'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  INTERNAL_REGISTRY: harbor-core.harbor.svc.cluster.local
+  PROJECT: ai
+  IMAGE_NAME: deco-exporter
+
+jobs:
+  # Build the image and run it before pushing anything: a green
+  # `docker build` says nothing about whether the entrypoint imports or the
+  # exporter reports a dead router honestly. Asserts on real /metrics output.
+  smoke:
+    runs-on: deco-exporter-docker-runner
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build image locally
+        run: docker build -t deco-exporter:ci .
+
+      - name: Smoke-test the built image
+        run: bin/smoke-test.sh deco-exporter:ci | tee smoke.out
+
+      # The script prints SMOKE-COMPLETE only as its last line; a crash that
+      # still exits 0 would not reach it.
+      - name: Assert the smoke test completed
+        run: grep -qx 'SMOKE-COMPLETE' smoke.out
+
+  build:
+    needs: smoke
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: deco-exporter-docker-runner
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fetch secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.18
+        with:
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          env-slug: prod
+          project-slug: homelab-bz-gt
+          secret-path: /
+          export-type: env
+          domain: http://infisical-infisical-standalone-infisical.infisical.svc.cluster.local:8080
+
+      - name: Log in to Harbor (internal)
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.INTERNAL_REGISTRY }}
+          username: ${{ env.HB_USERNAME }}
+          password: ${{ env.HB_PASSWORD }}
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ env.CICD_APP_CLIENT_ID }}
+          private-key: ${{ env.CICD_APP_PRIVATE_KEY }}
+
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config-inline: |
+            [registry."harbor-core.harbor.svc.cluster.local"]
+              ca=["/etc/ssl/certs/ca-certificates.crt"]
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.INTERNAL_REGISTRY }}/${{ env.PROJECT }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=dev
+            type=sha,prefix=sha-
+
+      - name: Build + push (dev image)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.INTERNAL_REGISTRY }}/${{ env.PROJECT }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.INTERNAL_REGISTRY }}/${{ env.PROJECT }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Create GitHub release
+        # Patch++ off the latest release; publishing fires docker-release.yaml.
+        uses: dvystrcil/release-action@v0.2.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}

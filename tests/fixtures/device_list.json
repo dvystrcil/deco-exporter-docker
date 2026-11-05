@@ -1,0 +1,50 @@
+{
+  "result": {
+    "device_list": [
+      {
+        "role": "slave",
+        "nickname": "Kids",
+        "device_ip": "192.168.71.250",
+        "mac": "F0-09-0D-FA-29-84",
+        "device_model": "X50",
+        "hardware_ver": "1.0",
+        "software_ver": "1.8.0 Build 25102213 Rel. 43970",
+        "inet_status": "online",
+        "group_status": "connected",
+        "previous": "F0-09-0D-FA-29-7C",
+        "port_count": 3,
+        "signal_strength": {
+          "band5": -50,
+          "band2_4": -37
+        },
+        "rx_rate_list": {
+          "band5": 960,
+          "band2_4": 412
+        },
+        "tx_rate_list": {
+          "band5": 1297,
+          "band2_4": 258
+        },
+        "device_type": "HOMEWIFISYSTEM"
+      },
+      {
+        "role": "master",
+        "nickname": "Living Room",
+        "device_ip": "192.168.68.1",
+        "mac": "F0-09-0D-FA-29-7C",
+        "device_model": "X50",
+        "hardware_ver": "1.0",
+        "software_ver": "1.8.0 Build 25102213 Rel. 43970",
+        "inet_status": "online",
+        "group_status": "connected",
+        "previous": "",
+        "signal_level": {
+          "band5": "0",
+          "band2_4": "0"
+        },
+        "device_type": "HOMEWIFISYSTEM"
+      }
+    ]
+  },
+  "error_code": 0
+}
