@@ -1,0 +1,51 @@
+{
+ "_note": "Real run, 2026-11-05: laptop 192.168.86.56, three unthrottled 1 GiB downloads back to back. The rate varied within each run, so curl's run average is a poor match for the Deco's instantaneous sample: that is why the script defaults to --limit-rate.",
+ "ip": "192.168.86.56",
+ "runs": [
+  {
+   "start": 1793900364.0,
+   "end": 1793900421.0,
+   "bytes_per_s": 18862667
+  },
+  {
+   "start": 1793900421.0,
+   "end": 1793900534.0,
+   "bytes_per_s": 9506495
+  },
+  {
+   "start": 1793900534.0,
+   "end": 1793900585.0,
+   "bytes_per_s": 20947495
+  }
+ ],
+ "polls": [
+  {
+   "start": 1793900225.0,
+   "raw": 772
+  },
+  {
+   "start": 1793900289.0,
+   "raw": 772
+  },
+  {
+   "start": 1793900352.0,
+   "raw": 821
+  },
+  {
+   "start": 1793900416.0,
+   "raw": 503
+  },
+  {
+   "start": 1793900480.0,
+   "raw": 208416
+  },
+  {
+   "start": 1793900544.0,
+   "raw": 217526
+  },
+  {
+   "start": 1793900607.0,
+   "raw": 396
+  }
+ ]
+}
