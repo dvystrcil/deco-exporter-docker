@@ -53,6 +53,7 @@ jobs:
     runs-on: deco-exporter-docker-runner
     permissions:
       contents: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v7
@@ -60,8 +61,8 @@ jobs:
       - name: Fetch secrets from Infisical
         uses: Infisical/secrets-action@v1.0.18
         with:
-          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
-          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          method: oidc
+          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
           env-slug: prod
           project-slug: homelab-bz-gt
           secret-path: /
