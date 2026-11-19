@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   pytest:
-    runs-on: deco-exporter-docker-runner
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 

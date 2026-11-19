@@ -29,8 +29,10 @@ jobs:
   # Build the image and run it before pushing anything: a green
   # `docker build` says nothing about whether the entrypoint imports or the
   # exporter reports a dead router honestly. Asserts on real /metrics output.
+  # Needs no secret or cluster access, so it runs on a GitHub-hosted runner
+  # (homelab#2377); `build` below stays on the ARC runner.
   smoke:
-    runs-on: deco-exporter-docker-runner
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
